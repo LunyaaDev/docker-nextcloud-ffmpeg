@@ -57,4 +57,4 @@ jobs:
           push: true
           build-args: |
             BASE_IMAGE="nextcloud@${{ matrix.data.digest }}"
-          tags: ${{ matrix.data.tags }}
+          tags: ${{ join(matrix.data.tags, ',') }}
