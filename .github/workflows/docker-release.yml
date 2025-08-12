@@ -36,6 +36,7 @@ jobs:
     strategy:
       matrix: 
         data: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
+    if: needs.generate-matrix.outputs.matrix != '[]' 
     steps:
       
       - name: Check out
