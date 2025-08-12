@@ -1,0 +1,45 @@
+name: Build Docker Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' 
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Run Python script to output JSON matrix
+        id: set-matrix
+        run: |
+          python3 get-images-tags.py > matrix.json
+          matrix=$(jq -c '.' matrix.json)
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  build-image:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        data: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
+    steps:
+      - name: Show matrix job info
+        run: |
+          echo "Digest: ${{ matrix.data.digest }}"
+          for tag in ${{ matrix.data.tags }}; do
+            echo "Tag: $tag"
+          done
